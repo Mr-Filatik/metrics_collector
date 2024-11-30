@@ -15,6 +15,7 @@ func main() {
 	mux.HandleFunc("/json", mainJsonHandle)
 	mux.HandleFunc("/api", mainApiHandle)
 	mux.HandleFunc("/api/login", mainApiLoginHandle)
+	//mux.HandleFunc("/api/account", authMiddleware(http.HandlerFunc(mainApiAccountHandle)))
 
 	fmt.Println("Start server on", address)
 	err := http.ListenAndServe(address, mux)
@@ -140,4 +141,20 @@ func mainApiLoginHandle(response http.ResponseWriter, request *http.Request) {
 	} else {
 		io.WriteString(response, form)
 	}
+}
+
+func authMiddleware(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("auth") == "user" {
+			next.ServeHTTP(w, r)
+		} else {
+			http.Error(w, "Invalid auth token", http.StatusUnauthorized)
+		}
+	})
+}
+
+func mainApiAccountHandle(response http.ResponseWriter, request *http.Request) {
+
+	response.Write([]byte("Account!"))
 }
