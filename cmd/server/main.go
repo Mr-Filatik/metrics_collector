@@ -15,7 +15,7 @@ func main() {
 	mux.HandleFunc("/json", mainJsonHandle)
 	mux.HandleFunc("/api", mainApiHandle)
 	mux.HandleFunc("/api/login", mainApiLoginHandle)
-	//mux.HandleFunc("/api/account", authMiddleware(http.HandlerFunc(mainApiAccountHandle)))
+	mux.Handle("/api/account", Conveyor(http.HandlerFunc(mainApiAccountHandle), authMiddleware))
 
 	fmt.Println("Start server on", address)
 	err := http.ListenAndServe(address, mux)
@@ -143,8 +143,16 @@ func mainApiLoginHandle(response http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func authMiddleware(next http.Handler) http.Handler {
+type Middleware func(http.Handler) http.Handler
 
+func Conveyor(h http.Handler, middlewares ...Middleware) http.Handler {
+	for _, middleware := range middlewares {
+		h = middleware(h)
+	}
+	return h
+}
+
+func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("auth") == "user" {
 			next.ServeHTTP(w, r)
