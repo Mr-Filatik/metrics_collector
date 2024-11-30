@@ -16,6 +16,7 @@ func main() {
 	mux.HandleFunc("/api", mainApiHandle)
 	mux.HandleFunc("/api/login", mainApiLoginHandle)
 	mux.Handle("/api/account", Conveyor(http.HandlerFunc(mainApiAccountHandle), authMiddleware))
+	mux.HandleFunc("/api/file", mainApiFileHandle)
 
 	fmt.Println("Start server on", address)
 	err := http.ListenAndServe(address, mux)
@@ -165,4 +166,10 @@ func authMiddleware(next http.Handler) http.Handler {
 func mainApiAccountHandle(response http.ResponseWriter, request *http.Request) {
 
 	response.Write([]byte("Account!"))
+}
+
+func mainApiFileHandle(response http.ResponseWriter, request *http.Request) {
+
+	//http.ServeFile(response, request, "../../cmd/server/main.go")
+	http.ServeFile(response, request, "../../assets/static/images/icon.png")
 }
