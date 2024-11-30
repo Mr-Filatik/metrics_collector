@@ -14,6 +14,7 @@ func main() {
 	mux.HandleFunc("/", mainHandle)
 	mux.HandleFunc("/json", mainJsonHandle)
 	mux.HandleFunc("/api", mainApiHandle)
+	mux.HandleFunc("/api/login", mainApiLoginHandle)
 
 	fmt.Println("Start server on", address)
 	err := http.ListenAndServe(address, mux)
@@ -107,4 +108,36 @@ func mainApiHandle(response http.ResponseWriter, request *http.Request) {
 
 	data := []byte("Hello. I am Server API.")
 	response.Write(data)
+}
+
+const form = `<html>
+    <head>
+    <title></title>
+    </head>
+    <body>
+        <form action="/api/login" method="post">
+            <label>Логин <input type="text" name="login"></label>
+            <label>Пароль <input type="password" name="password"></label>
+            <input type="submit" value="Login">
+        </form>
+    </body>
+</html>`
+
+func Auth(login, password string) bool {
+	return login == "user" && password == "password"
+}
+
+func mainApiLoginHandle(response http.ResponseWriter, request *http.Request) {
+
+	if request.Method == http.MethodPost {
+		login := request.FormValue("login")
+		password := request.FormValue("password")
+		if Auth(login, password) {
+			io.WriteString(response, "Hello!")
+		} else {
+			http.Error(response, "Invalid login or password", http.StatusUnauthorized)
+		}
+	} else {
+		io.WriteString(response, form)
+	}
 }
