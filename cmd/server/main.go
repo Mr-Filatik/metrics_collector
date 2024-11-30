@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +12,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", mainHandle)
+	mux.HandleFunc("/json", mainJsonHandle)
 	mux.HandleFunc("/api", mainApiHandle)
 
 	fmt.Println("Start server on", address)
@@ -71,6 +73,29 @@ func mainHandle(response http.ResponseWriter, request *http.Request) {
 	}
 
 	http.Error(response, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
+}
+
+type MessageResponse struct {
+	Message string `json:"message"`
+	Error   string `json:"error"`
+}
+
+func mainJsonHandle(response http.ResponseWriter, request *http.Request) {
+
+	if request.Method != http.MethodGet {
+		http.Error(response, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
+		return
+	}
+
+	data := MessageResponse{"Test message.", "Test error."}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		http.Error(response, err.Error(), 500)
+		return
+	}
+	response.Header().Set("content-type", "application/json")
+	response.WriteHeader(http.StatusOK)
+	response.Write(jsonData)
 }
 
 func mainApiHandle(response http.ResponseWriter, request *http.Request) {
